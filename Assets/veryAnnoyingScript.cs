@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using KModkit;
 
-public class script : MonoBehaviour {
+public class veryAnnoyingScript : MonoBehaviour {
 
     public KMSelectable[] buttons = new KMSelectable[16];
     public TextMesh[] texts = new TextMesh[16];
@@ -35,6 +35,7 @@ public class script : MonoBehaviour {
     {
         int[] numbers = new int[16];
         int[] ans = new int[16];
+        string log = "Button points (stage 1):\n";
         for (int i=0; i<16; i++)
         {
             numbers[i] = Random.Range(0, 65536);
@@ -46,7 +47,10 @@ public class script : MonoBehaviour {
                 mask <<= 1;
             }
             texts[i].text = numbers[i].ToString();
+            log += ans[i].ToString() + " ";
+            if (i % 4 == 3) log += "\n";
         }
+        Debug.Log(log);
         return ans;
     }
 
@@ -113,6 +117,7 @@ public class script : MonoBehaviour {
     int[] generateSecondStage()
     {
         int[] ans = new int[16];
+        string log = "Button points (stage 2):\n";
         for (int i=0; i<16; i++)
         {
             red[i] = Random.Range(0, 256);
@@ -122,8 +127,10 @@ public class script : MonoBehaviour {
             buttonMesh[i].material.color = new Color(red[i] / 255f, green[i] / 255f, blue[i] / 255f);
             colors[i] = "#"+ dectohex(red[i]) + dectohex(green[i]) + dectohex(blue[i]);
             ans[i] = rgbToHsvSum(255-red[i], 255 - green[i], 255 - blue[i]);
+            log += ans[i].ToString() + " ";
+            if (i % 4 == 3) log += "\n";
         }
-
+        Debug.Log(log);
         return ans;
     }
 
@@ -224,5 +231,39 @@ public class script : MonoBehaviour {
         buttons[14].OnHighlightEnded += delegate () { color.text = "";};
         buttons[15].OnHighlightEnded += delegate () { color.text = "";};
         
+    }
+#pragma warning disable 414
+    private readonly string TwitchHelpMessage =
+        @"Use !{0} press # to press button on this position. Buttons are numbered 0-15 in reading order.";
+    private bool TwitchPlaysActive = false;
+#pragma warning restore 414
+
+    IEnumerator ProcessTwitchCommand(string Command)
+    {
+        Command = Command.ToLower();
+        if (!Command.RegexMatch("press ([0-9])+")) yield return "sendtochaterror Invalid command!";
+        else
+        {
+            int? num = Command.Substring(6).TryParseInt();
+            if (num == null || num < 0 || num > 15) yield return "sendtochaterror Invalid command!";
+            else Press((int)num);
+        }
+        yield return null;
+    }
+
+    IEnumerator TwitchHandleForcedSolve()
+    {
+        yield return null;
+        Module.HandlePass();
+        string final = "YOUDIDITGOODJOB!";
+        for (int i = 0; i < 16; i++)
+        {
+            texts[i].text = final[i].ToString();
+            buttonMesh[i].material.color = new Color(0, 178 / 255f, 0);
+            buttonObjects[i].SetActive(true);
+        }
+        moduleMesh.material.color = new Color(94 / 255f, 1, 94 / 255f);
+        secondStage = false;
+        solved = true;
     }
 }
