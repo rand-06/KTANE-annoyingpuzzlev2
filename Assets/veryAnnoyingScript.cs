@@ -76,6 +76,7 @@ public class veryAnnoyingScript : MonoBehaviour {
         else
         {
             secondStage = true;
+            StartCoroutine(colorCycle());
             correctPressed = 0;
             points = generateSecondStage();
         }
@@ -129,6 +130,22 @@ public class veryAnnoyingScript : MonoBehaviour {
                 }
             }
         }
+    }
+
+    IEnumerator colorCycle()
+    {
+        float timer = 0f;
+        Color c;
+        while (true)
+        {
+            c = Color.HSVToRGB(timer/6f, 1, 1);
+            c.a = .5f;
+            color.color = c;
+            timer += Time.deltaTime;
+            yield return new WaitForEndOfFrame();
+            if (timer >= 6f) timer -= 6f;
+        }
+
     }
 
 	void Start () {
